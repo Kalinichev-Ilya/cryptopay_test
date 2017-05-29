@@ -54,3 +54,29 @@ Exchange Transfers через API.
  4. Заполнить поля `amount_currency` = `USD`, `from_account` = `USD_UUID`, `to_account` = `USD_UUID` (см. Приложение)
  4. Отправить запрос
  5. В ответе получить сообщение о невозможности проведении транзакции `Account currencies must be different`
+
+
+#### Тест-кейс №3. Проверка на изменение значений при совершении транзакции
+
+###### Шаги:
+1. Создать Post запрос:
+ ```ruby
+	url = https://sandbox.cryptopay.me/api/v2/exchange_transfers
+	headers: { 'Content Type': 'application/x-www-form-urlencoded',
+            'X-Api-Key': API Key пользователя.}
+	body: { 'amount': сумма перевода,
+		    'amount_currency': валюта поля Amount в формате BTC\EUR\USD\GBP,
+		    'from_account': UUID аккаунта пользователя, с которого делается перевод,
+		    'to_account': UUID аккаунта пользователя, на который делается перевод}
+```
+ 2. Указать, что в запросе используется `ssl`
+ 3. Заполнить поле `amount`, число должно быть меньше, чем кол-во денег на счете
+ 4. Заполнить поля `amount_currency` = `GBP`, `from_account` = `GBP_UUID`, `to_account` = `EUR_UUID` (см. Приложение)
+ 4. Отправить запрос
+ 5. Получить ответ
+ 6. Сравнить ответ с ожидаемым результатом (см. Ожидаемый результат)
+ ---
+| Ожидаемый результат |
+|:--------------------|
+| сумма на `from_account` уменьшилась на `amount + (amount * 0,01)` |
+| сумма на `to_account` увеличилась на `amount * текущий курс` |
