@@ -1,6 +1,8 @@
-# require 'net/http'
+require 'net/http'
+require 'uri'
+# require 'openssl'
 # require 'httparty'
-require 'httpi'
+# require 'httpi'
 require 'yaml'
 require_relative 'config'
 
@@ -13,31 +15,39 @@ class Chatterbox
   # amount: the number of transferred funds
   # from: currency from_account which the transaction is made 'Ex. :BTC'
   # to: currency to_account to which the transaction is made 'Ex :EUR'
-  def transaction(amount, from, to)
-    @request = HTTPI::Request.new
-    @request.url = URI(Config.uri)
-    @request.body = {amount: amount.to_i,
-                     amount_currency: from,
-                     from_account: Config.uuid(from),
-                     to_account: Config.uuid(to)}
-    @request.headers = {'Content Type' => 'application/x-www-form-urlencoded',
-                        'X-Api-Key' => Config.auth_key}
-    @response = HTTPI.post(@request)
+  def exchange_transfer(amount, from, to)
+    uri = URI(Config.uri)
+    @request = Net::HTTP::Post.new(uri.path)
+
+    params = {amount: amount.to_i,
+              amount_currency: from,
+              from_account: Config.uuid(from),
+              to_account: Config.uuid(to)}
+
+    @request.set_form_data(parameters: params)
+    @request['Content Type'] = 'application/x-www-form-urlencoded'
+    @request['X-Api-Key'] = Config.auth_key
+
+
+    @response = Net::HTTP.start(uri.hostname, 443,
+                                use_ssl: uri.scheme == 'https') do |https|
+      puts https.use_ssl?
+      https.request @request
+    end
   end
 
-  def log_request
-    puts '---------'
-    puts 'REQUEST:'
-    puts @request.headers
-    puts @request.body
-  end
+  # def log_request
+  #   puts '---------'
+  #   puts 'REQUEST:'
+  #   puts @request.headers
+  #   puts @request.body
+  # end
 
   def log_response
     puts '---------'
     puts 'RESPONSE:'
     puts @response.code
-    puts @response.headers
-    puts @response.body
+    puts @response.class.name
   end
 
   # parsing response & get data for tests
@@ -47,14 +57,28 @@ class Chatterbox
 end
 
 
-# old version:
-#
-# res = HTTParty.post(uri, headers: head, parameters: params)
-#
-# # res.response.body.split(',').to_a.each {|el| puts el}
-# # res = HTTParty.post(uri, headers: {'Content Type' => 'application/x-www-form-urlencoded; charset=UTF-8', 'X-Api-Key' => 'acea9d6d570540bb7d0e0f077182ffdc'},
-# #                     params: {'amount_currency' => 'USD',
-# #                              'amount' => '0.1',
-# #                              'from_account' => 'd96d23be-30c9-4243-a9ab-e432e9a6f71d',
-# #                              'to_account' => '95b22bb7-1bee-4bc5-9555-52689137eb49'})
-# puts res.response.body
+# httparty:
+# url = URI(Config.uri)
+# body = {amount: amount.to_i,
+#         amount_currency: from,
+#         from_account: Config.uuid(from),
+#         to_account: Config.uuid(to)}
+# headers = {'Content Type' => 'application/x-www-form-urlencoded',
+#            'X-Api-Key' => Config.auth_key}
+# @response = HTTParty.post(url, headers: headers, parameters: body, verify: false)
+
+
+# # httpi
+# def transaction(amount, from, to)
+#   @request = HTTPI::Request.new
+#   @request.auth.basic('qaguard0001@mailinator.com', 'g3tt3stsd0ne')
+#   @request.auth.ssl.verify_mode = :none
+#   @request.url = URI(Config.uri)
+#   @request.body = {amount: amount.to_i,
+#                    amount_currency: from,
+#                    from_account: Config.uuid(from),
+#                    to_account: Config.uuid(to)}
+#   @request.headers = {'Content Type' => 'application/x-www-form-urlencoded',
+#                       'X-Api-Key' => Config.auth_key}
+#   @response = HTTPI.post(@request)
+# end
