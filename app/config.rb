@@ -1,6 +1,6 @@
 require 'yaml'
 
-# Config
+# Wrapper over secure.yml
 class Config
   @config = YAML.load_file('secure.yml')
 
