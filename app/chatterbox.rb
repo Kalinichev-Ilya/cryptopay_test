@@ -1,5 +1,6 @@
 require 'uri'
 require 'httpi'
+require 'json'
 require_relative 'config'
 
 # Helps to form a request to the server,
@@ -14,6 +15,8 @@ class Chatterbox
   # amount: the number of transferred funds
   # from: currency from_account which the transaction is made 'Ex. :BTC'
   # to: currency to_account to which the transaction is made 'Ex :EUR'
+  #
+  # Returns json {key: :value}
   def exchange_transfer(amount, from, to)
     api_key = Config.auth_key
     url = URI(Config.uri)
@@ -29,25 +32,7 @@ class Chatterbox
     @request.body = params
     @request.headers = headers
     @response = HTTPI.post(@request)
-  end
-
-  def log_request
-    puts '---------'
-    puts 'REQUEST:'
-    puts @request.headers
-    puts @request.body
-  end
-
-  def log_response
-    puts '---------'
-    puts 'RESPONSE:'
-    puts @response.code
-    puts @response.class
-    puts @response.body
-  end
-
-  # parsing response & get data for tests
-  def response
+    JSON.parse(@response.body, symbolize_names: true)
   end
 
   private
