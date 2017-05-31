@@ -20,8 +20,8 @@ RSpec.describe 'Chatterbox' do
       let(:response) {chatterbox.exchange_transfer('', :USD, :EUR)}
       it {expect(response.code).to eq 422}
 
-      subject(:error) {JSON.parse(response.body)[:amount]}
-      it {expect(:error).to eq :error}
+      subject(:error) {JSON.parse(response.body)['amount']}
+      it {expect(error.join(',')).to include('must be greater than')}
     end
   end
 end
